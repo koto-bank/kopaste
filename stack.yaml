@@ -1,0 +1,12 @@
+resolver: lts-9.9
+
+packages:
+- .
+
+extra-deps:
+- happstack-lite-7.3.6
+- random-strings-0.1.1.0
+
+flags: {}
+
+extra-package-dbs: []
