@@ -22,8 +22,10 @@ executable kopaste
                      , text >= 1.2.2.2
                      , directory  >= 1.3.0.0
                      , random-strings >= 0.1.1.0
+                     , transformers >= 0.3.0.0
   default-language:    Haskell2010
   other-modules:       Pages
+                     , HighlightThemes.Dracula
 
 source-repository head
   type:     git

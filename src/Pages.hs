@@ -8,11 +8,14 @@ module Pages (
 
 import Control.Monad.IO.Class
 
-import Control.Applicative (optional)
+import Control.Applicative
+
 import Control.Exception
+import System.IO.Error
 
 import Data.Text.Lazy (unpack)
 import Data.Text (pack)
+import Data.Char (toLower)
 
 import System.Directory
 
@@ -23,30 +26,45 @@ import Happstack.Server as HP
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as HA
 
+import HighlightThemes.Dracula
+
 showPastePage :: String -> ServerPartT IO Response
 showPastePage pasteName = do
-  pstCode :: Either IOException String <-
-    liftIO $ try (readFile ("pastes/" ++ pasteName))
-  maybeLangHint <- optional $ lookText "lang"
-  langHint <- return $ fmap (\l -> unpack l) maybeLangHint
+  pstCode <- liftIO $ try (readFile ("pastes/" ++ pasteName))
+  maybeLangHint <- optional $ lookText "lang" -- Optionally select a language for highlight.js
+  langHint <- return $ unpack <$> maybeLangHint
+  maybeThemeSelected <- optional $ lookText "theme" -- Optionally select a theme
+  themeSelected <- return $ case (unpack <$> maybeThemeSelected) of
+                            Just t -> case [toLower ch | ch <- t] of
+                                      "dracula" -> draculaTheme
+                                      -- TODO: add more themes
+                                      _ -> draculaTheme
+                            Nothing -> draculaTheme
   case pstCode of
-    Left e -> notFound $ toResponse ("Paste " ++ pasteName ++ " does not exist")
+    Left e ->
+      if (isDoesNotExistError e)
+        then notFound $ toResponse ("Paste " ++ pasteName ++ " does not exist")
+        else internalServerError $ toResponse $ show e
     Right pasteCode ->
       ok $
       toResponse $
       html $ do
         H.head $ do
           H.title $ preEscapedString ("Paste " ++ pasteName)
-          H.link ! rel "stylesheet" !
-            href "/static/highlight-styles/dracula.css"
+          H.style $ preEscapedString themeSelected
           H.script ! src "/static/highlight.pack.js" $ "" -- Load highlight.js
           H.script $ preEscapedString "hljs.initHighlightingOnLoad();"
-        H.body $ do H.pre $ H.code ! class_ (case langHint of
-                                               Just l -> textValue (pack $ "lang-" ++ l)
-                                               Nothing -> "") $ string pasteCode
+        H.body $ do
+          H.pre $
+            H.code !
+            class_
+              (case langHint of
+                 Just l -> textValue (pack $ "lang-" ++ l)
+                 Nothing -> "") $
+            string pasteCode
 
 
--- Generate a random name for a paste, if such a paste already exists - generate a new name
+-- | Generate a random name for a paste, if such a paste already exists, generate a new name
 genRandomName :: ServerPartT IO String
 genRandomName = do
   randName <- liftIO $ randomString (onlyAlphaNum randomASCII) 6

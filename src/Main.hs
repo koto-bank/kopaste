@@ -5,7 +5,6 @@ module Main where
 import Control.Monad (msum)
 
 import Happstack.Server
-import Happstack.Server.Routing
 
 import Pages
 
