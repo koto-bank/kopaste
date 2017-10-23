@@ -50,7 +50,7 @@ showPastePage pasteName = do
       toResponse $
       html $ do
         H.head $ do
-          H.title $ preEscapedString ("Paste " ++ pasteName)
+          H.title $ preEscapedString ("Kopaste ~ " ++ pasteName)
           H.style $ preEscapedString themeSelected
           H.script ! src "/static/highlight.pack.js" $ "" -- Load highlight.js
           H.script $ preEscapedString "hljs.initHighlightingOnLoad();"
