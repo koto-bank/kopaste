@@ -28,18 +28,25 @@ import Text.Blaze.Html5.Attributes as HA
 
 import HighlightThemes.Dracula
 
+selectTheme :: ServerPartT IO (String, String) -- (PastePage,IndexPage)
+selectTheme =
+  let defaultResult = (draculaPastePage, draculaIndexPage)
+  in do maybeThemeSelected <- optional $ lookText "theme" -- Optionally select a theme
+        return $
+          case (unpack <$> maybeThemeSelected) of
+            Just t ->
+              case [toLower ch | ch <- t] of
+                "dracula" -> defaultResult
+                _ -> defaultResult
+            Nothing -> defaultResult
+
+
 showPastePage :: String -> ServerPartT IO Response
 showPastePage pasteName = do
   pstCode <- liftIO $ try (readFile ("pastes/" ++ pasteName))
   maybeLangHint <- optional $ lookText "lang" -- Optionally select a language for highlight.js
   langHint <- return $ unpack <$> maybeLangHint
-  maybeThemeSelected <- optional $ lookText "theme" -- Optionally select a theme
-  themeSelected <- return $ case (unpack <$> maybeThemeSelected) of
-                            Just t -> case [toLower ch | ch <- t] of
-                                      "dracula" -> draculaTheme
-                                      -- TODO: add more themes
-                                      _ -> draculaTheme
-                            Nothing -> draculaTheme
+  (themeSelected, _) <- selectTheme
   case pstCode of
     Left e ->
       if (isDoesNotExistError e)
@@ -86,16 +93,21 @@ uploadPage = do
   return (toResponse seeOtherResp)
 
 indexPage :: ServerPartT IO Response
-indexPage =
+indexPage = do
+  (_, themeSelected) <- selectTheme
   ok $
-  toResponse $
-  html $ do
-    H.head $ do H.title "Kopaste"
-    H.body $ do
-      h1 ! class_ "name-header" $ "Kopaste"
-      H.form ! HA.id "text-form" ! action "/upload" ! HA.method "POST" !
-        enctype "multipart/form-data" $ do
-        textarea ! type_ "text" ! name "text" ! HA.form "text-form" ! rows "25" !
-          cols "100" $
-          ""
-        br >> input ! type_ "submit" ! value "Paste!"
+    toResponse $
+    html $ do
+      H.head $ do
+        H.title "Kopaste"
+        H.style $ preEscapedString themeSelected
+      H.body $ do
+        h1 ! class_ "name-header" $ "Kopaste"
+        H.form ! HA.id "text-form" ! action "/upload" ! HA.method "POST" !
+          enctype "multipart/form-data" $ do
+          textarea ! class_ "paste-text" ! type_ "text" ! name "text" !
+            HA.form "text-form" !
+            rows "25" !
+            cols "100" $
+            ""
+          br >> input ! class_ "submit-paste" ! type_ "submit" ! value "Paste!"

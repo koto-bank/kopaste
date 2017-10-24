@@ -4,7 +4,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module HighlightThemes.Dracula
-  ( draculaTheme
+  ( draculaPastePage
+  , draculaIndexPage
   ) where
 
 import Prelude hiding ((**))
@@ -15,15 +16,16 @@ import Clay hiding (map)
 
 import Data.Text.Lazy (unpack)
 
-draculaTheme :: String
-draculaTheme =
+draculaPastePage :: String
+draculaPastePage =
   unpack $
   renderWith compact [] $ do
+    body ? backgroundColor "#282a36"
     ".hljs" ? do
       display block
       overflowX auto
       padding (em 0.5) (em 0.5) (em 0.5) (em 0.5)
-      background ("#282a36" :: Color)
+      backgroundColor "#282a36"
     (".hljs-built_in" <> ".hljs-selector-tag" <> ".hljs-section" <> ".hljs-link") ?
       color "#8be9fd"
     "hljs-keyword" ? color "#ff79c6"
@@ -48,3 +50,15 @@ draculaTheme =
       fontWeight bold
     (".hljs-literal" <> ".hljs-number") ? color "#bd93f9"
     ".hljs-emphasis" ? fontStyle italic
+
+draculaIndexPage :: String
+draculaIndexPage =
+  unpack $
+  renderWith compact [] $ do
+    body ? do
+      backgroundColor "#282a36"
+      fontColor "#bd93f9"
+    ".paste-text" ? do
+      backgroundColor "#41434f"
+      fontColor "#f8f8f2"
+    ".submit-paste" ? backgroundColor "#bd93f9"
