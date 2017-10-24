@@ -23,6 +23,7 @@ executable kopaste
                      , directory  >= 1.3.0.0
                      , random-strings >= 0.1.1.0
                      , transformers >= 0.3.0.0
+                     , time >= 1.6.0.1
   default-language:    Haskell2010
   other-modules:       Pages
                      , HighlightThemes.Dracula
