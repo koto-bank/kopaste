@@ -46,4 +46,4 @@ kopasteApp =
     ]
 
 main :: IO ()
-main = (forkIO runCleanup) >> simpleHTTP nullConf kopasteApp
+main = (forkIO runCleanup) >> simpleHTTP nullConf {port = 34522} kopasteApp
